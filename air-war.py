@@ -1,11 +1,50 @@
 """
-# Change Log v0.3.2
+# Change Log
 
-1. Richer Sound Effects
-2. High Score Recording
-3. 800x600 Resolution
-4. Dynamic Explosion Animation
+## v0.1.0
+
+- Basic Gameplay
+- Enemy Generation
+- Enemy Movement
+- Enemy Destruction
+- Player Shooting
+- Player Movement
+- Player Destruction
+- Game Over
+- Score
+
+## v0.2.0
+
+- Sound Effects
+- 4-color Palette
+
+## v0.3.0
+
+- Lives
+
+## v0.3.1
+
+- 16-color Palette
+
+## v0.3.2
+
+- Richer Sound Effects
+- High Score Recording
+- 800x600 Resolution
+- Dynamic Explosion Animation
+
+## v0.3.3
+
+- Pause Menu
+- Gameover Sound
+
+# Controls
+
+- WASD/Arrows to move
+- Space/Enter to shoot
+- Esc to pause
 """
+__main=__name__=='__main__'
 
 import sys
 try:
@@ -14,9 +53,10 @@ try:
 	# from pydub.playback import play
 	import pydub
 except ImportError:
-	print(f'Some modules are not installed, please install them:\n\033[7m{sys.executable} -m pip install pydub pyaudio audioop-lts -i https://pypi.tuna.tsinghua.edu.cn/simple\033[0m')
-	input('Press enter to exit')
-	sys.exit(1)
+	if __main:
+		print(f'Some modules are not installed, please install them:\n\033[7m{sys.executable} -m pip install pydub pyaudio audioop-lts -i https://pypi.tuna.tsinghua.edu.cn/simple\033[0m')
+		input('Press enter to exit')
+		sys.exit(1)
 # from multiprocessing import Process
 import hashlib
 import os
@@ -27,10 +67,10 @@ import time
 
 class TmpFile:
 	def __init__(self,data:bytes,end='.png'):
-		self.path = os.path.join(os.path.expandvars('%temp%'),hashlib.sha256(data).hexdigest()+end)
+		self.path=os.path.join(os.path.expandvars('%temp%'),hashlib.sha256(data).hexdigest()+end)
 		with open(self.path,'wb') as f:
 			f.write(data)
-		self.rmwdel = False
+		self.rmwdel=False
 	def open(self,mode='rb',encoding=None):
 		return open(self.path,mode,encoding=encoding)
 	def __del__(self):
@@ -45,9 +85,9 @@ class Position:
 		self.x=x
 		self.y=y
 	def __add__(self,other):
-		return Position(self.x+other.x,self.y+other.y)
+		return Position(self.x+other.x, self.y+other.y)
 	def __sub__(self,other):
-		return Position(self.x-other.x,self.y-other.y)
+		return Position(self.x-other.x, self.y-other.y)
 	def __getitem__(self,key):
 		if key==0:
 			return self.x
@@ -80,22 +120,21 @@ class Enemy:
 	def draw(self,scr):
 		if self.destory:
 			p=image.subsurface(0,15+5*(self.destory//21),7,5)
-			p=pygame.transform.flip(p,self.pos.x%2==1,self.pos.y%2==1)
-			scr.blit(p, (self.pos.x-3, self.pos.y-4))
+			p=pygame.transform.flip(p,self.pos.x%2==1, self.pos.y%2==1)
+			scr.blit(p,(self.pos.x-3, self.pos.y-4))
 		else:
-			scr.blit(image.subsurface(10,6,7,5), (self.pos.x-3, self.pos.y-4))
+			scr.blit(image.subsurface(10,6,7,5),(self.pos.x-3, self.pos.y-4))
 	def get_rect(self):
 		if self.destory:
 			return pygame.Rect(-100,-100,0,0)
-		return pygame.Rect(self.pos.x-3, self.pos.y-6, 7, 4)
+		return pygame.Rect(self.pos.x-3, self.pos.y-6,8,4)
 def fade(cid,fm:pygame.Color,to:pygame.Color,t=60):
 	for i in range(t):
 		r=fm[0]+(to[0]-fm[0])*i/t
 		g=fm[1]+(to[1]-fm[1])*i/t
 		b=fm[2]+(to[2]-fm[2])*i/t
 		palette[cid]=(r,g,b)
-		time.sleep(1/t)
-
+		time.sleep(1/60)
 def debug():
 	global com
 	while True:
@@ -110,44 +149,46 @@ def play_audio(audio_segment:pydub.AudioSegment):
 	# t.daemon=True
 	# t.start()
 	pygame.mixer.Sound(p).play()
-dbmode=0
-if dbmode:import _thread
-if dbmode:
-	_thread.start_new_thread(debug,())
-pygame.init()
+dbmode=__main and 0
+if dbmode:import _thread;_thread.start_new_thread(debug,())
+if __main:pygame.init()
 
 shoot=Square(200,bit_depth=8).to_audio_segment(100,-35).overlay(Triangle(200,bit_depth=8).to_audio_segment(100,-40)).overlay(WhiteNoise(1000,bit_depth=8).to_audio_segment(100,-32))
-shoot_e=Triangle(200,bit_depth=8).to_audio_segment(100,-40)
-explode=WhiteNoise(1000,bit_depth=8).to_audio_segment(400,-20).overlay(Square(300,bit_depth=8).to_audio_segment(400,-30))
-explode_e=Square(280,bit_depth=8).to_audio_segment(200,-40).overlay(WhiteNoise(800,bit_depth=8).to_audio_segment(100,-25))
-# gmo=Square(170,bit_depth=8).to_audio_segment(400,-30)+Square(150,bit_depth=8).to_audio_segment(400,-30)+Square(140,bit_depth=8).to_audio_segment(400,-30)
+shoot_e=Triangle(200,bit_depth=8).to_audio_segment(100,-33)
+explode=WhiteNoise(800,bit_depth=8).to_audio_segment(400,-20).overlay(Square(300,bit_depth=8).to_audio_segment(400,-30))
+explode_e=Square(280,bit_depth=8).to_audio_segment(200,-38).overlay(WhiteNoise(800,bit_depth=8).to_audio_segment(100,-25))
+gmo=Square(147,bit_depth=8).to_audio_segment(500,-30)+Square(139,bit_depth=8).to_audio_segment(500,-30)+Square(131,bit_depth=8).to_audio_segment(700,-30)
 # play_audio(gmo)
-f=TmpFile(base64.b85decode(b'iBL{Q4GJ0x0000DNk~Le0000`0000W1Oos70CyeYUjP6A0drDELIAGL9O(c600d`2O+f$vv5yP<VFdsH01r@1R7C&)0RR90{{R60*Z_ZO09M-V2><{932;bRa{vGizyJUazyWI3i3tDz02p*dSaefwW^{L9a%BKeVQFr3E>1;MAT=&AE;t)$>Zkw!0JddVNoGk&DgX!o000F58UY0W0RR91N&o-=8vz9X0RR91QUCw|C;<Zi0RR910ssI2F#!Sq5C8xGS^xk5X@>*=0RR91Y5)KL00000zjgrt=mP)%zjgrt=mP)%P+@6qbS_RsR3J4jF)la&0{{S!2LJ>B001yDGcW<50{{U400031000G`1ONd5005K#00000000620RRF31ONa4QaLyP0ssd91ONa4FflMN00000OlYF{9nK2n0004;Nkl<ZILnPwZI*&C3`~FnB)A8#bq`>l9zc-$pJ^u_MfVR{9wp*1$xKor79}QTrq@NXZ>n}<2SAk-Ky2zyM1nwULo~Dm24h?qli(8(!ml?*ai(B(641Oe#-h%p{~3dpgUx~Z<#Hw92bI%E3dNfg&En|;NT?vBnq(JZbsDI@BZW5HgnGo>v~m*|qC3zQ+nZFGjHWsnGd1HwH^Ei1_GaL3x9%lIj)m7U>+C=Z53}KJK)9JeEm%8H%%Z5k^+?oet8`#r2}E5E<(;voZY{$Poq4XMsd1}YkK(JPsvh97A{{tiwmms}NmjnW04V-d0DtaPeVkaw02<04C4@vaD$AmBKC4_Mfu6cV;^GN%dQK|!tU8WQJ`&SfD>?u&-R{;tGnF*v!J8;PemGf|#XM9QZyVk7l*LR~8%T08=(M_rGCsGpK76W#cPcbDGBC~B!kcNUYm8r>tv+PQ_-f%g{Mvv@w0f^mgC8wi0ysXVdLSD$o+6rfpzF~oOq@K-lf&b>H=1KCJ^(+C*|)$y+2u;iukc8|00000NkvXXu0mjf'))
+f=TmpFile(base64.b85decode(b'iBL{Q4GJ0x0000DNk~Le0000`0000W1Oos70CyeYUjP6A0drDELIAGL9O(c600d`2O+f$vv5yP<VFdsH01r@1R7C&)0RR90{{R60*Z_ZO09M-V2><{932;bRa{vGizyJUazyWI3i3tDz02p*dSaefwW^{L9a%BKeVQFr3E>1;MAT=&AE;t)$>Zkw!0JddVNoGk&DgX!o000F58UY0W0RR91N&o-=8vz9X0RR91QUCw|C;<Zi0RR910ssI2F#!Sq5C8xGS^xk5X@>*=0RR91Y5)KL00000zjgrt=mP)%zjgrt=mP)%P+@6qbS_RsR3J4jF)la&0{{S!2LJ>B001yDGcW<50{{U400031000G`1ONd5005K#00000000620RRF31ONa4QaLyP0ssd91ONa4FflMN00000OlYF{9nK2n0004vNkl<ZILnQc>y?5)422V*fLz=H9CizEjus$D|21u11Na9Wju7$VCN~o#VgWHRGwlb-b^`39X9WO;f_j2qH4+WPP8xMJ!BC7NV-kHtg!J1%QCulhT|{M$im|9^;axFgIn*4)m&=`~zDl`_q*1+-rdd3FfTR_KRkQ3ytWJa4J%W1E4{1GO-L!HO4ATv?#darMrlPq{#Z1lmpf|x?GTLV7&)&M-jGP;v%81cHiXP^Mdjq1I38LuQK(Q7@1@1?pR$HZkZ6&C6Im(-2OI>S*A9m)olnT>^w_b~%EY;+J9#*7-<L|m9XD`XhH%x)zPX+k%nBe2Y=mRv$FC~mbHY)QBxn3bRNzhZ5NL)NYPR|80U4g!T@tK)gYeA>TaDUkL`Lwa*+jX4B-`RQy>F+B&+HClYd22WDvUm@rf33^(#8Hvoz!5ciGpy6XsS^YHuDEaE()~4X`v*AISm%iP=P;ev)*3Gn4cyV~>@7@Ao;Gr4;J(oe@MrMjn0*WW1GA7!IF5o)2><{907*qoM6N<$f&'))
 
 screen = pygame.display.set_mode((800, 600))
 scr=pygame.Surface((160, 120),depth=8)
 
 image=pygame.image.load(f.path).convert(8)
-image.set_colorkey((255, 255, 255))
+image.set_colorkey((255,255,255))
+
 palette=[(b,b,b) for b in range(256)]
 palette[0]=pygame.Color(32,32,32)
 palette[2]=pygame.Color(255,32,32)
 palette[3]=pygame.Color(255,255,32)
 palette[4]=pygame.Color(255,160,32)
-
 score=0
 pos=Position(80,80)
 enemies:list[Enemy]=[]
 bullets:list[Position]=[]
 enemies_bullets=[]
-t=0
+t=0 # tick
 gameover=False
 ct=0
 gamespeed=60
 com=''
-max_bullets=3
+max_bullets=4
 lives=3
 _dying=False
+def exit():
+	pygame.quit()
+	if dbmode:_thread.exit()
+	sys.exit()
 def die():
 	global gameover,lives,_dying
 	_dying=True
@@ -155,22 +196,24 @@ def die():
 		lives-=1
 	else:
 		gameover=True
-while not gameover:
+paused=0
+
+while not gameover and __main:
 	scr.set_palette(palette)
 	scr.fill(255)
 	image.set_palette(scr.get_palette())
 	_launched=False
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
-			pygame.quit()
-			if dbmode:_thread.exit()
-			sys.exit()
+			exit()
 		if event.type == pygame.KEYDOWN:
 			if event.key in [pygame.K_SPACE,pygame.K_RETURN] and len(bullets)<max_bullets and not _launched:
 				bullets.append(Position(pos.x,pos.y))
 				scr.blit(image.subsurface(9,15,5,2),(pos.x-2,pos.y-3))
 				play_audio(shoot)
 				_launched=True
+			if event.key==pygame.K_ESCAPE:
+				paused=1
 	scr.blit(image.subsurface(40,0,26,6), (1, 1))
 	keys=pygame.key.get_pressed()
 	speed=Position(1.5,1)
@@ -185,11 +228,10 @@ while not gameover:
 	pos.x=pos.x%160
 	pos.y=max(0,min(116,pos.y))
 	pr=pygame.Rect(pos.x-4, pos.y, 9, 5)
-
 	for i in range(len(str(score))): # draw score
 		c=int(str(score)[i])
 		scr.blit(image.subsurface(c*4,0,4,6), (30+i*4, 1))
-	for i in range(lives): # draw lives
+	for i in range(lives): # draw hearts
 		scr.blit(image.subsurface(9,18,5,5), (1+i*6, 7))
 	for i in bullets:
 		i.y-=1.5
@@ -254,6 +296,17 @@ while not gameover:
 		except:
 			print('Invalid command')
 		com=''
+	while paused:
+		scr.fill(255,(64,44,32,7))
+		scr.blit(image.subsurface(32,21,30,5),(65,45))
+		scr.set_palette(palette)
+		screen.blit(pygame.transform.scale(scr,screen.get_size()), (0, 0))
+		for e in pygame.event.get():
+			if e.type == pygame.QUIT:
+				exit()
+			if e.type == pygame.KEYDOWN:
+				paused=0
+		pygame.display.update()
 	if _dying:
 		play_audio(explode)
 		scr.blit(image.subsurface(15,16,15,15), (pos.x-7, pos.y-4))
@@ -265,35 +318,33 @@ while not gameover:
 			pygame.time.Clock().tick(30)
 			for event in pygame.event.get():
 				if event.type==pygame.QUIT:
-					pygame.quit()
-					if dbmode:_thread.exit()
-					sys.exit()
+					exit()
 		_dying=False
 		enemies=[]
 		enemies_bullets=[]
 		bullets=[]
 		pos=Position(80,80)
 		t=0
-pygame.display.set_caption(f'Air War - Game Over - Score: {score}')
-scr.fill(255,(57,49,46,7))
-scr.blit(image.subsurface(18,6,44,5),(58,50))
-if os.path.exists(os.path.expandvars('%APPDATA%/AirWar-HighScore.dat')):
-	with open(os.path.expandvars('%APPDATA%/AirWar-HighScore.dat'),'rb') as f:
-		highscore=int.from_bytes(f.read(),'big')
-else:
-	highscore=-1
-if score>highscore:
-	highscore=score
-	scr.fill(255,(59,55,42,6))
-	scr.blit(image.subsurface(32,16,40,4),(60,56))
-	with open(os.path.expandvars('%APPDATA%/AirWar-HighScore.dat'),'wb') as f:
-		f.write(score.to_bytes(8,'big'))
-while 1:
-	for event in pygame.event.get():
-		if event.type in [pygame.QUIT,pygame.KEYDOWN]:
-			pygame.quit()
-			if dbmode:_thread.exit()
-			sys.exit()
-	screen.blit(pygame.transform.scale(scr,screen.get_size()), (0, 0))
-	pygame.display.update()
-	pygame.time.Clock().tick(60)
+if __main:
+	play_audio(gmo)
+	pygame.display.set_caption(f'Air War - Game Over - Score: {score}')
+	scr.fill(255,(57,49,46,7))
+	scr.blit(image.subsurface(18,6,44,5),(58,50))
+	if os.path.exists(os.path.expandvars('%APPDATA%/AirWar-HighScore.dat')):
+		with open(os.path.expandvars('%APPDATA%/AirWar-HighScore.dat'),'rb') as f:
+			highscore=int.from_bytes(f.read(),'big')
+	else:
+		highscore=-1
+	if score>highscore:
+		highscore=score
+		scr.fill(255,(59,55,42,6))
+		scr.blit(image.subsurface(32,16,40,4),(60,56))
+		with open(os.path.expandvars('%APPDATA%/AirWar-HighScore.dat'),'wb') as f:
+			f.write(score.to_bytes(8,'big'))
+	while 1:
+		for event in pygame.event.get():
+			if event.type in [pygame.QUIT,pygame.KEYDOWN]:
+				exit()
+		screen.blit(pygame.transform.scale(scr,screen.get_size()), (0, 0))
+		pygame.display.update()
+		pygame.time.Clock().tick(60)
